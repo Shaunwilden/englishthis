@@ -22,3 +22,6 @@ Saved history and vocabulary stay in this browser. Photos/audio are not saved in
 ## Validation
 
 npm test checks configuration, input limits, mocked API image/reply/transcription payloads and readable errors, including requests without a code. npm run build checks deployment inputs. No live API or visual/device browser verification was possible in this environment.
+
+## Separate screens
+Welcome → Photo → Choose a task → Task → Your answer → Feedback. Help and useful words expand only when requested. Listen is removed. Keep public/wizard.js beside public/app.js when uploading.
