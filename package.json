@@ -1,0 +1,13 @@
+{
+  "name": "english-this",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts.mjs",
+    "test": "node --test tests/*.test.mjs"
+  }
+}

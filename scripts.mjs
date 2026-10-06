@@ -1,0 +1,1 @@
+import {access} from 'node:fs/promises'; for (const p of ['public/index.html','public/app.js','public/styles.css','netlify/functions/english.mjs']) await access(p); console.log('English This is ready. Publish public/ with netlify/functions/.');
