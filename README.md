@@ -25,3 +25,5 @@ npm test checks configuration, input limits, mocked API image/reply/transcriptio
 
 ## Separate screens
 Welcome → Photo → Choose a task → Task → Your answer → Feedback. Help and useful words expand only when requested. Listen is removed. Keep public/wizard.js beside public/app.js when uploading.
+
+The welcome screen now offers Scenario or Take photo. Scenario opens three everyday examples: a café, a shop and finding your way. Examples use sample tasks and explicitly labelled sample feedback. Photo tasks use live AI. Level selection appears on the task-choice screen.
