@@ -9,16 +9,31 @@ const scenarioExamples={
  shop:{title:'In a shop',scene:'You want a blue T-shirt. The one on display is too small.',simple:'Ask the shop assistant for a larger blue T-shirt. Ask how much it costs.',advanced:'Ask for another size. If it is not available, explain what you need and ask about other options.',hints:['Do you have…?','How much is…?'],language:[{phrase:'Do you have this in…?',meaning:'Ask for a different size or colour.',example:'Do you have this in a larger size?'},{phrase:'How much does it cost?',meaning:'Ask about the price.',example:'This one looks good. How much does it cost?'}]},
  travel:{title:'Finding your way',scene:'You are outside a train station. You need to find the town centre.',simple:'Ask someone how to get to the town centre. Ask if you can walk there.',advanced:'Ask for directions to the town centre. Find out whether walking or taking a bus would be better.',hints:['How do I get to…?','Can I walk there?'],language:[{phrase:'How do I get to…?',meaning:'Ask someone for directions.',example:'How do I get to the town centre?'},{phrase:'How long does it take?',meaning:'Ask about the time needed.',example:'How long does it take to walk there?'}]}
 };
-const welcome=section('welcome','Welcome to English This','Practise English for everyday life. Choose a situation or take a photo. Try a short task, learn useful words and get help with your answer.');
+const welcome=section('welcome','Welcome to English This','English This helps you practise English for everyday life.');
 welcome.classList.add('welcome');
-welcome.append(action('Scenario',()=>{entryRoute='scenario';showView('scenario');}),action('Take photo',()=>{entryRoute='photo';demoScene=false;updateStart();showView('photo');},'button secondary full'));
+const overview=text('div','','overview');overview.append(text('p','Choose a way to practise:'));
+const options=text('ul','');
+const scenarioOption=text('li','');scenarioOption.append(text('strong','Scenario: '),document.createTextNode('Choose an example, such as ordering food, shopping or asking for directions.'));
+const photoOption=text('li','');photoOption.append(text('strong','Take photo: '),document.createTextNode('Take or upload a photo of a menu, sign, object or place. AI will create an English task about it.'));
+const studyOption=text('li','');studyOption.append(text('strong','Self-study: '),document.createTextNode('Build your English with short lessons and feedback.'));options.append(scenarioOption,photoOption,studyOption);
+overview.append(options,text('p','Choose your English level. Then choose a short task, speaking practice or useful words. The app shows one step at a time. You can open extra help when you need it.'),text('p','Type your answer or record your voice. For photo tasks, AI gives feedback on your answer and suggests what to improve. The example scenarios use sample feedback.'),text('p','Save useful words and finished tasks in My English so you can look at them again.'));
+welcome.append(overview,action('Continue',()=>showView('path')));
+const pathChoice=section('path','What do you want to do?');
+pathChoice.append(action('Practise a scenario',()=>{entryRoute='scenario';showView('scenario');}),action('Work with a photo',()=>{entryRoute='photo';demoScene=false;updateStart();showView('photo');}),action('Back',()=>showView('welcome'),'textbutton'));
+$('navExplore').hidden=true;
 const scenarios=section('scenario','Choose a scenario','Try an everyday situation.');
 Object.entries(scenarioExamples).forEach(([id,item])=>{scenarios.append(action(item.title,()=>{selectedScenario=id;demoScene=true;entryRoute='scenario';updateStart();showView('choice');},'button secondary full'));});
-scenarios.append(text('p','These examples use sample tasks and feedback.','small'),action('Back',()=>showView('welcome'),'textbutton'));
+scenarios.append(text('p','These examples use sample tasks and feedback.','small'),action('Back',()=>showView('path'),'textbutton'));
 const levelRow=document.querySelector('.levelrow');
 const photo=section('photo','Add a photo','An object, a menu or a place.');
 photo.append($('capture'),$('cameraInput'),$('uploadInput'));
-photo.append(action('Next',()=>{if(!image){toast('Choose a photo first.',true);return;}showView('choice');}),action('Back',()=>showView('welcome'),'textbutton'));
+const photoNext=action('Next',()=>{if(!image){toast('Choose a photo first.',true);return;}showView('photoOptions');});photoNext.disabled=!image;photo.append(photoNext,action('Back',()=>showView('path'),'textbutton'));
+const photoOptions=section('photoOptions','What do you want to do with your photo?');
+const selectedPhoto=text('img','','chosenPhoto');selectedPhoto.alt='Your uploaded photo';photoOptions.append(selectedPhoto);
+async function startPhotoMode(mode){if(busy||!image)return;demoScene=false;document.querySelector(`input[name="mode"][value="${mode}"]`).checked=true;await startActivity();}
+photoOptions.append(action('Speak',()=>startPhotoMode('speak')),action('Teach me',()=>startPhotoMode('teach')),action('Change photo',()=>showView('photo'),'textbutton'));
+const afterPhoto=async e=>{const uploaded=await choosePhoto(e);photoNext.disabled=!image;if(uploaded&&image&&!busy&&!demoScene){selectedPhoto.src=image;showView('photoOptions');}};
+['cameraInput','uploadInput'].forEach(id=>{const input=$(id);input.removeEventListener('change',choosePhoto);input.addEventListener('change',afterPhoto);});
 $('emptyCapture').querySelector('h2').hidden=true;$('emptyCapture').querySelector('p').hidden=true;$('emptyCapture').querySelector('.small').textContent='Avoid private information.';
 const choice=section('choice','Choose your task','What would you like to do?');
 choice.append(levelRow,$('modes'));
@@ -28,6 +43,7 @@ modes.forEach((m,i)=>{m.querySelector('strong').textContent=titles[i];m.querySel
 const extra=document.createElement('details');$('context').setAttribute('aria-label','Optional question about your photo');extra.append(text('summary','Add a question (optional)'),$('context'));choice.append(extra,$('start'),action('Back',()=>showView(entryRoute==='scenario'?'scenario':'photo'),'textbutton'));$('start').textContent='Show my task';
 $('exploreView').hidden=true;
 const task=$('activityView');task.classList.add('wizard');const taskMain=document.querySelector('.activityMain');
+const speakScreen=section('speak','Speak');const teachScreen=section('teach','Teach me');const activityParts=Array.from(task.children);
 const response=section('response','Your turn');
 const responsePrompt=text('p','','responsePrompt');response.append(responsePrompt);
 const method=text('div','','tabs');const type=action('Type',()=>setMethod('type'),'button secondary');const voice=action('Speak',()=>setMethod('voice'),'button secondary');method.append(type,voice);response.append(method,$('answerForm'),action('Back to task',()=>showView('activity'),'textbutton'));
@@ -51,5 +67,5 @@ const originalStart=startActivity;startActivity=async function(forceDemo=false){
 const originalNewPhoto=$('newPhoto').onclick;$('newPhoto').onclick=()=>{if(busy)return;originalNewPhoto();if(view==='photo'){entryRoute='photo';demoScene=false;updateStart();}};
 $('navExplore').onclick=()=>showView(session?'activity':'welcome');
 document.querySelector('.brand').onclick=e=>{e.preventDefault();showView(session?'activity':'welcome');};
-const originalShow=showView;showView=function(next){originalShow(next);const effective=view;extra.hidden=entryRoute==='scenario';choice.querySelector('.lead').textContent=entryRoute==='scenario'?scenarioExamples[selectedScenario].title:'What would you like to do?';document.querySelectorAll('.stepLabel').forEach(el=>el.textContent='');const heading=$(effective+'View')?.querySelector('h1');if(heading&&!busy){heading.tabIndex=-1;heading.focus({preventScroll:true});}};
+const originalShow=showView;showView=function(next){if(busy||recorder?.state==='recording'){originalShow(next);return;}if(next==='activity'){const destination=session?.mode==='speak'?'speak':session?.mode==='teach'?'teach':'activity';const target=$(destination+'View');activityParts.forEach(part=>target.append(part));next=destination;}if(next==='photoOptions'){if(!image){next='photo';}else{photoOptions.insertBefore(levelRow,selectedPhoto);selectedPhoto.src=image;}}if(next==='choice')choice.insertBefore(levelRow,$('modes'));if(next==='photo')photoNext.disabled=!image;originalShow(next);const effective=view;document.querySelector('.bottomnav').hidden=['welcome','path'].includes(effective);extra.hidden=entryRoute==='scenario';choice.querySelector('.lead').textContent=entryRoute==='scenario'?scenarioExamples[selectedScenario].title:'What would you like to do?';document.querySelectorAll('.stepLabel').forEach(el=>el.textContent='');const heading=$(effective+'View')?.querySelector('h1');if(heading&&!busy){heading.tabIndex=-1;heading.focus({preventScroll:true});}};
 showView('welcome');

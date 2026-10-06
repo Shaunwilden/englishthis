@@ -27,3 +27,12 @@ npm test checks configuration, input limits, mocked API image/reply/transcriptio
 Welcome → Photo → Choose a task → Task → Your answer → Feedback. Help and useful words expand only when requested. Listen is removed. Keep public/wizard.js beside public/app.js when uploading.
 
 The welcome screen now offers Scenario or Take photo. Scenario opens three everyday examples: a café, a shop and finding your way. Examples use sample tasks and explicitly labelled sample feedback. Photo tasks use live AI. Level selection appears on the task-choice screen.
+
+Latest flow: B1 overview → Continue → What do you want to do? → Practise a scenario / Work with a photo. Both route buttons use the green accent. The old bottom English this navigation button is hidden; My English remains available after the introduction.
+
+Photo route: take/upload → automatic Speak / Teach me choice → a separate Speak or Teach me screen. Both use the uploaded image and live AI, with level selection on the photo-choice screen.
+
+## Self-study unit: Working in a team
+Integrated into Continue → Self-study. Six B1 mini-lessons cover vocabulary, grammar, reading, functional language, speaking and writing. Fixed-answer tasks work offline after the app is cached. Productive tasks use the existing feedback API, with a self-check alternative. Speaking includes recording/playback and optional transcription; it does not assess pronunciation. Completion records practice, not mastery. Progress is stored on this device and included in Export my English. There is no listening lesson in this release.
+
+Update the same repository; do not create a second app. Upload public/self-study.js and replace public/index.html, public/app.js, public/wizard.js and public/sw.js, plus public/styles.css. The package contains the complete app, so you can upload its contents as usual. No new API key or server setting is needed.
