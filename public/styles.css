@@ -10,3 +10,5 @@
 .chosenPhoto{display:block;width:100%;max-height:220px;object-fit:contain;border-radius:16px;margin:20px 0}.wizard .activityMain h2{font-size:1.5rem;line-height:1.25}.wizard .activityMain>.button{margin-top:20px}#photoOptionsView .levelrow{margin:20px 0}#teachView .activityImage,#speakView .activityImage{max-height:180px;overflow:hidden}
 
 #studyView .studyText{font-size:1.06rem;line-height:1.65}#studyView>.button{margin:12px 0;white-space:normal;text-align:left}#studyView .studyCheck{display:flex;gap:12px;align-items:center;margin:14px 0}#studyView input[type=checkbox]{width:22px;height:22px;flex-shrink:0}#studyView textarea{margin:16px 0}#studyView .responsePrompt{padding:16px;background:#e7eef2;border-radius:12px}#studyView audio{margin:12px 0}
+
+#studyView .studyText{white-space:pre-line}#studyView>select{width:100%;font-size:1rem;margin:16px 0}#studyView>h1{overflow-wrap:anywhere}
