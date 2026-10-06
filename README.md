@@ -45,3 +45,6 @@ Talk about your strengths is first and is the only available self-study lesson. 
 
 ### Automatic self-study transcription
 Stopping a self-study recording now automatically sends it to transcription. The transcript stays editable before feedback. A failed transcription retains the audio and offers Retry transcription. Recordings request 64 kbps and normalise MIME labels; server validation accepts browser codec labels and distinguishes format errors from actual size errors. No live microphone/browser verification was available in the build environment.
+
+### Strengths activity sequence
+Activity 1: “Match the word to the right meaning.” Eight matches. Activity 2: “Choose the correct word for each sentence.” Eight supplied workplace sentences with all eight words available in a dropdown, one sentence per screen. Answer order: reliable, patient, organised, flexible, creative, hard-working, helpful, confident. Activity 3: record personal strengths with automatic transcription and feedback.
