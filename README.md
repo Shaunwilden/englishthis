@@ -39,3 +39,6 @@ Update the same repository; do not create a second app. Upload public/self-study
 
 ### Adapted strengths lesson
 Self-study → Talk about your strengths now uses the supplied workplace introduction, eight word-to-meaning matches (one per screen), and a recording task with three reflection questions. Correct mapping: reliable=d, organised=f, patient=h, creative=a, flexible=c, hard-working=b, confident=g, helpful=e. Record → stop → turn recording into text → check words → get feedback → try again. Feedback checks strengths language and the work example, not pronunciation.
+
+### Current pilot menu
+Talk about your strengths is first and is the only available self-study lesson. Other lesson buttons display “Not available yet” while staying on the menu; their content is not opened. Incorrect answers display “That's not correct, try again”. Skip moves to the next screen, including from feedback. The app uses #00205B as its IH blue screen colour, with white text on blue buttons.
