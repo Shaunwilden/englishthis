@@ -25,7 +25,7 @@ choice.append(levelRow,$('modes'));
 choice.querySelector('legend').hidden=true;
 const modes=choice.querySelectorAll('.mode');const titles=['Quick task','Speaking','Learn some words'];const descriptions=['A short English task.','Talk about your photo.','Find useful words.'];
 modes.forEach((m,i)=>{m.querySelector('strong').textContent=titles[i];m.querySelector('small').textContent=descriptions[i];});
-const extra=document.createElement('details');extra.append(text('summary','Add a question (optional)'),$('context'));$('context').setAttribute('aria-label','Optional question about your photo');choice.append(extra,$('start'),action('Back',()=>showView(entryRoute==='scenario'?'scenario':'photo'),'textbutton'));$('start').textContent='Show my task';
+const extra=document.createElement('details');$('context').setAttribute('aria-label','Optional question about your photo');extra.append(text('summary','Add a question (optional)'),$('context'));choice.append(extra,$('start'),action('Back',()=>showView(entryRoute==='scenario'?'scenario':'photo'),'textbutton'));$('start').textContent='Show my task';
 $('exploreView').hidden=true;
 const task=$('activityView');task.classList.add('wizard');const taskMain=document.querySelector('.activityMain');
 const response=section('response','Your turn');
