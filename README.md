@@ -42,3 +42,6 @@ Self-study → Talk about your strengths now uses the supplied workplace introdu
 
 ### Current pilot menu
 Talk about your strengths is first and is the only available self-study lesson. Other lesson buttons display “Not available yet” while staying on the menu; their content is not opened. Incorrect answers display “That's not correct, try again”. Skip moves to the next screen, including from feedback. The app uses #00205B as its IH blue screen colour, with white text on blue buttons.
+
+### Automatic self-study transcription
+Stopping a self-study recording now automatically sends it to transcription. The transcript stays editable before feedback. A failed transcription retains the audio and offers Retry transcription. Recordings request 64 kbps and normalise MIME labels; server validation accepts browser codec labels and distinguishes format errors from actual size errors. No live microphone/browser verification was available in the build environment.

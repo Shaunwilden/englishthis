@@ -20,7 +20,10 @@ export function validate(b){
   if(b.history && (!Array.isArray(b.history)||b.history.length>12||b.history.some(x=>!x||!['user','assistant'].includes(x.role)||typeof x.text!=='string'||x.text.length>4000))) throw new UserError(400,'Start a new activity to continue.');
  }
  if(b.action==='transcribe'){
-  if(typeof b.audio!=='string'||b.audio.length>4000000||!/^data:audio\/(webm|mp4|mpeg|wav|ogg)(;codecs=[a-zA-Z0-9.-]+)?;base64,[A-Za-z0-9+/=]+$/.test(b.audio)) throw new UserError(400,'Please record a shorter audio response.');
+  if(typeof b.audio!=='string') throw new UserError(400,'No recording was received. Please record again.');
+  if(b.audio.length>4000000) throw new UserError(413,'This recording is too large. Please record a shorter response.');
+  if(!/^data:audio\/(webm|mp4|mpeg|wav|ogg)(?:;codecs=(?:[a-zA-Z0-9.,_-]+|"[a-zA-Z0-9.,_ -]+"))?;base64,[A-Za-z0-9+/]+={0,2}$/i.test(b.audio)) throw new UserError(400,'This audio format could not be read. Please record again or type your words.');
+
  }
 }
 async function upstream(url,body,headers){
@@ -39,7 +42,7 @@ export async function handler(event){
   if(!event.body||event.body.length>4500000) throw new UserError(413,'That file is too large. Please try a smaller file.');
   let b;try{b=JSON.parse(event.body);}catch{throw new UserError(400,'The request could not be read.');}validate(b);
   if(b.action==='transcribe'){
-   const [meta,base64]=b.audio.split(',');const mime=meta.slice(5).split(';')[0];const ext={'audio/webm':'webm','audio/mp4':'m4a','audio/ogg':'ogg','audio/wav':'wav','audio/mpeg':'mp3'}[mime];
+   const separator=b.audio.toLowerCase().indexOf(';base64,');const meta=b.audio.slice(0,separator);const base64=b.audio.slice(separator+8);const mime=meta.slice(5).split(';')[0].toLowerCase();const ext={'audio/webm':'webm','audio/mp4':'m4a','audio/ogg':'ogg','audio/wav':'wav','audio/mpeg':'mp3'}[mime];
    const form=new FormData();form.append('file',new Blob([Buffer.from(base64,'base64')],{type:mime}),'response.'+ext);form.append('model',process.env.TRANSCRIPTION_MODEL||'gpt-4o-mini-transcribe');form.append('language','en');
    const result=await upstream('audio/transcriptions',form,{});
    if(typeof result.text!=='string'||!result.text.trim()) throw new UserError(422,'No words were recognised. Try again, or type your answer.');

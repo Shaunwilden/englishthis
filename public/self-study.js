@@ -4,7 +4,7 @@ const root=section('study','Self-study','Build your English, one small step at a
 pathChoice.insertBefore(action('Self-study',()=>menu()),pathChoice.lastElementChild);
 const priorShow=showView;showView=function(next){priorShow(next);if(view===next)root.hidden=next!=='study';};
 const key='ih-team-study-v1';let progress={};try{progress=JSON.parse(localStorage.getItem(key))||{};}catch{}
-let lesson,index=0,attempts=0,media=null,chunks=[],url=null;
+let lesson,index=0,attempts=0,media=null,chunks=[],url=null,studyRecordingToken=0;
 const lessons={
  words:{title:'Words for teamwork',time:'3 minutes',steps:[
  {kind:'card',title:'A shared goal',body:'A shared goal is something everyone in the team wants to achieve.',example:'We all want to make a useful class guide.'},
@@ -52,7 +52,7 @@ const lessons={
  {kind:'write',title:'Send your team a plan',body:'Write 3–4 sentences. Your team is making a class guide. Say your task, suggest another task and give a deadline.',prompt:'Write a friendly 3–4 sentence message to a team making a class guide: say what you can do, suggest a task for someone else and give a deadline. Check those three goals and one useful language improvement.',model:'Hi everyone! I can write the introduction. Could you find the pictures, Ana? Let’s finish by Thursday so we can check our work.',checks:['Did you say what you can do?','Did you suggest another task politely?','Did you give a deadline?']}
  ]}
 };
-function stop(){if(media?.state==='recording')media.stop();if(url){URL.revokeObjectURL(url);url=null;}}
+function stop(){studyRecordingToken++;if(media?.state==='recording')media.stop();if(url){URL.revokeObjectURL(url);url=null;}}
 function clear(title){root.replaceChildren(text('p','SKILLS FOR LIFE · B1','eyebrow'),text('h1',title));}
 function display(){showView('study');const h=root.querySelector('h1');h.tabIndex=-1;h.focus({preventScroll:true});window.scrollTo(0,0);}
 function save(){try{localStorage.setItem(key,JSON.stringify(progress));}catch{toast('Progress could not be saved on this device.',true);}}
@@ -61,8 +61,54 @@ function next(){stop();index++;if(index>=lessons[lesson].steps.length){progress[
 function step(reset=true){stop();if(reset)attempts=0;const l=lessons[lesson],s=l.steps[index];clear(s.title);root.prepend(text('p',`${index+1} / ${l.steps.length} · ${l.title}`,'small'));if(s.body)root.append(text('p',s.body,'studyText'));if(s.matchNumber)root.append(text('p',`Strength ${s.matchNumber} of 8`,'small'));if(s.kind==='card'){if(s.example)root.append(text('p',s.example,'responsePrompt'));root.append(action('Continue',next));}else if(s.kind==='match'){const select=document.createElement('select');select.setAttribute('aria-label','Choose the meaning of '+s.title);const placeholder=text('option','Choose a meaning');placeholder.value='';select.append(placeholder);s.choices.forEach((label,i)=>{const o=text('option',label);o.value=String(i);select.append(o);});root.append(select,action('Check',()=>{if(select.value===''){toast('Choose a meaning first.',true);return;}check(s,Number(select.value));}));}else if(s.kind==='quiz'){s.choices.forEach((label,i)=>root.append(action(label,()=>check(s,i),'button secondary full')));}else productive(s);root.append(action('Skip',next,'button secondary full'),action('Back to lessons',menu,'textbutton'));display();}
 function check(s,i){attempts++;const correct=i===s.correct;clear(correct?'That’s right':"That's not correct, try again");if(correct){root.append(text('p',s.why),text('p',s.choices[s.correct],'responsePrompt'),action('Continue',next));}else {root.append(action('Try again',()=>{step(false);}));}root.append(action('Skip',next,'button secondary full'),action('Back to lessons',menu,'textbutton'));display();}
 function productive(s){const field=document.createElement('textarea');field.rows=4;field.maxLength=1500;field.setAttribute('aria-label',s.kind==='speak'?'Your spoken words or typed answer':'Your team message');field.placeholder=s.kind==='speak'?'Your words will appear here after transcription. You can also type.':'Write your answer here.';root.append(field);
-if(s.kind==='speak'){let blob;const record=action('Record my voice',async()=>{if(media?.state==='recording'){media.stop();return;}try{if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder)throw Error('Recording is unavailable here. You can type your words instead.');const stream=await navigator.mediaDevices.getUserMedia({audio:true});media=new MediaRecorder(stream);chunks=[];media.ondataavailable=e=>chunks.push(e.data);const timer=setTimeout(()=>{if(media?.state==='recording')media.stop();},60000);media.onstop=()=>{clearTimeout(timer);stream.getTracks().forEach(t=>t.stop());blob=new Blob(chunks,{type:media.mimeType});url=URL.createObjectURL(blob);player.src=url;player.hidden=false;transcribe.hidden=false;record.textContent='Record again';};media.start();record.textContent='Stop recording';}catch(e){toast(e.message,true);}},'button secondary full');const player=document.createElement('audio');player.controls=true;player.hidden=true;const transcribe=action('Turn recording into text',async()=>{transcribe.disabled=true;try{const audio=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(blob);});const result=await api({action:'transcribe',level:'B1',audio});field.value=result.text;toast('Check your words before asking for feedback.');}catch(e){toast(e.message,true);}finally{transcribe.disabled=false;}},'textbutton');transcribe.hidden=true;root.insertBefore(record,field);root.insertBefore(player,field);root.insertBefore(transcribe,field);root.append(text('p','Recording stays here until you choose to turn it into text. Feedback checks your words, not pronunciation.','small'));}
-const feedbackButton=action('Get feedback',async()=>{if(media?.state==='recording'){toast('Stop recording first.',true);return;}const answer=field.value.trim();if(!answer){toast('Write your answer or turn your recording into text first.',true);return;}feedbackButton.disabled=true;try{const f=await api({action:'reply',level:'B1',answer,activity:{title:s.title,prompt:s.prompt},history:[]});clear('Your feedback');root.append(text('h2','What worked'),text('p',f.strength),text('h2','Try this'),text('p',f.nextStep));const original=text('details','');original.append(text('summary','Your answer'),text('p',answer));root.append(original,action('Try again',()=>{step();root.querySelector('textarea').value=answer;}),action('Finish this lesson',next,'button secondary full'),action('Back to lessons',menu,'textbutton'));display();}catch(e){toast(e.message,true);}finally{feedbackButton.disabled=false;}});root.append(feedbackButton);
+if(s.kind==='speak'){
+ let blob,transcribing=false;
+ const note=text('p','When you stop, your recording is sent for transcription. Check your words before getting feedback. Feedback checks your words, not pronunciation.','small');
+ const status=text('p','','small');status.setAttribute('role','status');
+ const player=document.createElement('audio');player.controls=true;player.hidden=true;
+ async function transcribeRecording(){
+  if(!blob||transcribing)return;
+  const token=studyRecordingToken;transcribing=true;record.disabled=true;retry.hidden=true;field.disabled=true;status.textContent='Turning your recording into text…';
+  try{
+   if(blob.size>2900000)throw Error('This recording is too large. Try a shorter recording.');
+   const audio=await readBlob(blob);
+   const result=await api({action:'transcribe',level:'B1',audio});
+   if(token!==studyRecordingToken||!root.contains(field))return;
+   field.value=result.text.slice(0,1500);status.textContent='Check your words, then tap Get feedback.';
+  }catch(e){if(token===studyRecordingToken&&root.contains(field)){status.textContent=e.message;retry.hidden=false;}}
+  finally{transcribing=false;record.disabled=false;field.disabled=false;}
+ }
+ const retry=action('Retry transcription',transcribeRecording,'textbutton');retry.hidden=true;
+ const record=action('Record my voice',async()=>{
+  if(media?.state==='recording'){media.stop();return;}
+  record.disabled=true;const token=++studyRecordingToken;let stream;
+  try{
+   if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder)throw Error('Recording is unavailable here. You can type your words instead.');
+   stream=await navigator.mediaDevices.getUserMedia({audio:true});
+   if(token!==studyRecordingToken||!root.contains(field)){stream.getTracks().forEach(t=>t.stop());return;}
+   const mime=['audio/webm;codecs=opus','audio/mp4','audio/webm'].find(t=>MediaRecorder.isTypeSupported(t));
+   const captured=new MediaRecorder(stream,{...(mime?{mimeType:mime}:{}),audioBitsPerSecond:64000});media=captured;const parts=[];
+   captured.ondataavailable=e=>{if(e.data.size)parts.push(e.data);};
+   const timer=setTimeout(()=>{if(captured.state==='recording')captured.stop();},60000);
+   captured.onerror=()=>{clearTimeout(timer);stream.getTracks().forEach(t=>t.stop());status.textContent='Recording failed. Try again or type your words.';record.textContent='Record again';};
+   captured.onstop=async()=>{
+    clearTimeout(timer);stream.getTracks().forEach(t=>t.stop());
+    if(token!==studyRecordingToken||!root.contains(field))return;
+    const type=(captured.mimeType||parts[0]?.type||mime||'audio/webm').split(';')[0];
+    blob=new Blob(parts,{type});record.textContent='Record again';
+    if(!blob.size){status.textContent='No audio was recorded. Please try again.';return;}
+    if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(blob);player.src=url;player.hidden=false;
+    await transcribeRecording();
+   };
+   field.value='';retry.hidden=true;status.textContent='Recording… Tap Stop recording when you finish.';
+   captured.start();record.textContent='Stop recording';
+  }catch(e){stream?.getTracks().forEach(t=>t.stop());status.textContent=e.message;}
+  finally{record.disabled=false;}
+ },'button secondary full');
+ root.insertBefore(record,field);root.insertBefore(player,field);root.insertBefore(status,field);root.insertBefore(retry,field);root.append(note);
+}
+
+const feedbackButton=action('Get feedback',async()=>{if(field.disabled){toast('Wait for transcription to finish.',true);return;}if(media?.state==='recording'){toast('Stop recording first.',true);return;}const answer=field.value.trim();if(!answer){toast('Record your answer or type your words first.',true);return;}feedbackButton.disabled=true;try{const f=await api({action:'reply',level:'B1',answer,activity:{title:s.title,prompt:s.prompt},history:[]});clear('Your feedback');root.append(text('h2','What worked'),text('p',f.strength),text('h2','Try this'),text('p',f.nextStep));const original=text('details','');original.append(text('summary','Your answer'),text('p',answer));root.append(original,action('Try again',()=>{step();root.querySelector('textarea').value=answer;}),action('Finish this lesson',next,'button secondary full'),action('Back to lessons',menu,'textbutton'));display();}catch(e){toast(e.message,true);}finally{feedbackButton.disabled=false;}});root.append(feedbackButton);
 const review=document.createElement('details');review.append(text('summary','Check it yourself'));s.checks.forEach(c=>{const label=text('label','','studyCheck');const box=document.createElement('input');box.type='checkbox';label.append(box,document.createTextNode(c));review.append(label);});review.append(text('p','One possible answer:','small'),text('p',s.model),text('p','Your answer can be different. Check the goals, then improve it.','small'));root.append(review,action('Finish after self-check',()=>{if(!field.value.trim()&&s.kind!=='speak'){toast('Write a message first.',true);return;}if(!review.querySelectorAll('input:checked').length){review.open=true;toast('Use the checklist before finishing.',true);return;}next();},'textbutton'));}
 const exportOriginal=$('export').onclick;$('export').onclick=()=>{const old=data.selfStudy;data.selfStudy=progress;exportOriginal();if(old===undefined)delete data.selfStudy;else data.selfStudy=old;};
 })();
